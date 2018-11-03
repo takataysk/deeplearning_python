@@ -9,14 +9,14 @@ from two_layer_net import TwoLayerNet
 import matplotlib.pyplot as plt
 
 # ハイパーパラメータの設定
-max_epoch = 300
+max_epoch = 1000
 batch_size = 30
 hidden_size = 10
 learning_rate = 1.0
 
 x, t = spiral.load_data()
 model = TwoLayerNet(input_size=2, hidden_size=hidden_size, output_size=3)
-optimizer = SGD(lr=learning_rate)
+optimizer = Adam()
 
 # 学習で使用する変数
 data_size = len(x)
