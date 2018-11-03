@@ -15,11 +15,12 @@ class Trainer:
         self.optimizer = optimizer
 
         self.loss_list = []
+        self.test_loss_list = []
         self.eval_interval = None
         self.current_epoch = 0
 
-    def fit(self, x, t, max_epoch=10, batch_size=32, max_grad=None, eval_interval=20):
-        data_size = len(x)
+    def fit(self, x_train, t_train, x_test=None, t_test=None, max_epoch=10, batch_size=32, max_grad=None, eval_interval=20):
+        data_size = len(x_train)
         max_iters = data_size // batch_size
         self.eval_interval = eval_interval
         model, optimizer = self.model, self.optimizer
@@ -30,12 +31,12 @@ class Trainer:
         for epoch in range(max_epoch):
             # データのシャッフル
             idx = np.random.permutation(np.arange(data_size))
-            x = x[idx]
-            t = t[idx]
+            x_train = x_train[idx]
+            t_train = t_train[idx]
 
             for iters in range(max_iters):
-                batch_x = x[iters*batch_size : (iters+1)*batch_size]
-                batch_t = t[iters*batch_size : (iters+1)*batch_size]
+                batch_x = x_train[iters*batch_size : (iters+1)*batch_size]
+                batch_t = t_train[iters*batch_size : (iters+1)*batch_size]
 
                 # 勾配を求め、パラメータを更新
                 loss = model.forward(batch_x, batch_t)
@@ -51,7 +52,13 @@ class Trainer:
                 if (eval_interval is not None) and (iters % eval_interval) == 0:
                     avg_loss = total_loss / loss_count
                     elapsed_time = time.time() - start_time
-                    print('| epoch %d |  iter %d / %d | time %d[s] | loss %.2f'
+                    if (x_test is not None) and (t_test is not None):
+                        test_loss = model.forward(x_test, t_test)
+                        self.test_loss_list.append(test_loss)
+                        print('| epoch %d |  iter %d / %d | time %d[s] | loss %.2f | test_loss %.2f'
+                          % (self.current_epoch + 1, iters + 1, max_iters, elapsed_time, avg_loss, test_loss))
+                    else :
+                        print('| epoch %d |  iter %d / %d | time %d[s] | loss %.2f '
                           % (self.current_epoch + 1, iters + 1, max_iters, elapsed_time, avg_loss))
                     self.loss_list.append(float(avg_loss))
                     total_loss, loss_count = 0, 0
@@ -62,9 +69,12 @@ class Trainer:
         x = np.arange(len(self.loss_list))
         if ylim is not None:
             plt.ylim(*ylim)
-        plt.plot(x, self.loss_list, label='train')
+        plt.plot(x, self.loss_list, label='train', color='blue')
+        if len(self.test_loss_list) != 0:
+            plt.plot(x, self.test_loss_list, label='test',color='red')
         plt.xlabel('iterations (x' + str(self.eval_interval) + ')')
         plt.ylabel('loss')
+        plt.legend()
         plt.show()
 
 
