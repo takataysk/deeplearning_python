@@ -1,0 +1,2 @@
+# deeplearning_python
+DNNとCNNをPythonで実装してみただけのRepository
